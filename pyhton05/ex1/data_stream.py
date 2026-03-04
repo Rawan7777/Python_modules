@@ -53,16 +53,13 @@ class SensorStream(DataStream):
         if not data_batch:
             return "No data is provided"
         else:
-            temp = 0
-            temp_total = 0
+            my_list = []
             for ele in data_batch:
                 if isinstance(ele, dict):
-                    self.analysis_total += len(ele)
-                    temp += ele.get('temp', 0)
-                    temp_total += 1
+                    my_list.extend(value for value in ele.values() if value > criteria)
                 else:
                     return "The data is not well structured (dict)"
-            return f"Sensor analysis: {self.analysis_total} readings processed, avg temp: {temp / temp_total}°C"
+            return my_list
 
 class TransactionStream(DataStream):
     
@@ -92,6 +89,21 @@ class TransactionStream(DataStream):
         return {
             "processed_count": self.analysis_total,
         }
+    
+    def filter_data(self, data_batch: List[Any], criteria: Optional[str]
+        = None) -> List[Any]:
+
+        if not data_batch:
+            return "No data is provided"
+        else:
+            my_list = []
+            for ele in data_batch:
+                if isinstance(ele, dict):
+                    if ele['amount'] > criteria:
+                        my_list.append(ele['amount'])
+                else:
+                    return "The data is not well structured (dict)"
+            return my_list
 
 
 class EventStream(DataStream):
@@ -107,7 +119,6 @@ class EventStream(DataStream):
             return "No data is provided"
         else:
             errors = 0
-            temp_total = 0
             for ele in data_batch:
                 self.analysis_total += len(ele)
                 if isinstance(ele, list):
@@ -122,6 +133,20 @@ class EventStream(DataStream):
             "processed_count": self.analysis_total,
         }
 
+    def filter_data(self, data_batch: List[Any], criteria: Optional[str]
+        = None) -> List[Any]:
+
+        if not data_batch:
+            return "No data is provided"
+        else:
+            my_list = []
+            for ele in data_batch:
+                if isinstance(ele, list):
+                    my_list.extend(value for value in ele if value == criteria)
+                else:
+                    return "The data is not well structured (list)"
+            return my_list
+
 
 class StreamProcessor:
 
@@ -129,16 +154,32 @@ class StreamProcessor:
     
     def process_all(self, batches: List[dict]):
         for ele in batches:
-            a = ele['stream']
-            StreamProcessor.stream_objects.append(a)
-            b = ele['data']
 
-            a.process_batch(b)
+            stream = ele['stream']
+            StreamProcessor.stream_objects.append(stream)
+            data = ele['data']
 
-    def get_stats(self) -> Dict[str, Union[str, int, float]]:
+            stream.process_batch(data)
+
+    def get_stats(self):
         for stream in StreamProcessor.stream_objects:
             yield stream.get_stats()
 
+    def filter_all(self, batches_all: List[dict]):
+
+        result = dict()
+
+        for ele in batches_all:
+            stream = ele['stream']
+            data = ele['data']
+            criteria = ele['criteria']
+
+            result[stream] = stream.filter_data(data, criteria)
+
+        x, y = result.values()
+
+        print(f"Filtered results: {len(x)} critical sensor alerts, {len(y)} large transaction")
+        
 if __name__ == "__main__":
 
     print("=== CODE NEXUS - POLYMORPHIC STREAM SYSTEM ===\n")
@@ -191,7 +232,6 @@ if __name__ == "__main__":
     processor.process_all(batches)
     gen = processor.get_stats()
 
-
     print("Batch 1 Results:")
     curr = next(gen)
     print(f"- Sensor data: {curr['processed_count']} readings processed")
@@ -199,3 +239,17 @@ if __name__ == "__main__":
     print(f"- Transaction data: {curr['processed_count']} operations processed")
     curr = next(gen)
     print(f"- Event data: {curr['processed_count']} events processed")
+
+    print("\nStream filtering active: High-priority data only")
+
+    batches_all: List[dict] = [
+        {"stream": sensor_02, "data": [{"temp": 50.5}, {"temp": 69.5}], "criteria": 40},
+        {"stream": trans_02, "data": [
+            {"operation": "buy", "amount": 50},
+            {"operation": "sell", "amount": 200},
+            {"operation": "buy", "amount": 80},
+            {"operation": "buy", "amount": 120},
+        ], "criteria": 150}
+    ]
+
+    processor.filter_all(batches_all)
