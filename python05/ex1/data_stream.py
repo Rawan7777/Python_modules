@@ -193,7 +193,7 @@ class StreamProcessor:
             StreamProcessor.stream_objects.append(stream)
             stream.process_batch(data)
 
-    def get_stats_all(self) -> Generator[Dict[str, Union[str, int, float]]]:
+    def get_stats_all(self) -> Generator[Dict[str, Union[str, int, float]], None, None]:
         for stream in StreamProcessor.stream_objects:
             yield stream.get_stats()
 
