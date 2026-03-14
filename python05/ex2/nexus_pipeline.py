@@ -32,7 +32,9 @@ class InputStage:
 
 
 class TransformStage:
+
     def process(self, data: Any) -> Any:
+
         if not isinstance(data, dict):
             raise ValueError("TransformStage: expected dict")
         if data["type"] == "json":
@@ -51,7 +53,9 @@ class TransformStage:
 
 
 class OutputStage:
+
     def process(self, data: Any) -> str:
+
         if not isinstance(data, dict):
             raise ValueError("OutputStage: expected dict")
         if data["type"] == "json":
