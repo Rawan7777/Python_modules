@@ -35,11 +35,12 @@ class NumericProcessor(DataProcessor):
             total = sum(data)
             avg = total / count
 
+            return f"Processed {count} numeric values, sum={total}, avg={avg}"
+    
         elif isinstance(data, (int, float)):
 
             return f"Processed 1 numeric values, sum={data}, avg={data}"
 
-        return f"Processed {count} numeric values, sum={total}, avg={avg}"
 
     def format_output(self, result: str) -> str:
         """overridden format_output method for NumericProcessor"""
@@ -148,7 +149,7 @@ def main() -> None:
 
     print("Initializing Log Processor...")
     log_processor = LogProcessor()
-    log_data = ["ERROR: Connection timeout", "sgeg: wg timGEWeout"]
+    log_data = "ERROR: Connection timeout"
     print(f'Processing data: "{log_data}"')
     try:
         if log_processor.validate(log_data):
