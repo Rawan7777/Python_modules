@@ -36,11 +36,10 @@ class NumericProcessor(DataProcessor):
             avg = total / count
 
             return f"Processed {count} numeric values, sum={total}, avg={avg}"
-    
+
         elif isinstance(data, (int, float)):
 
             return f"Processed 1 numeric values, sum={data}, avg={data}"
-
 
     def format_output(self, result: str) -> str:
         """overridden format_output method for NumericProcessor"""

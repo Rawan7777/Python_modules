@@ -20,29 +20,29 @@ class DataStream(ABC):
 class SensorStream(DataStream):
 
     def __init__(self, stream_id: str) -> None:
-        self.stream_id = stream_id
-        self.data_type = "Environmental Data"
-        self.analysis_total = 0
+        self.stream_id: str = stream_id
+        self.data_type: str = "Environmental Data"
+        self.analysis_total: int = 0
 
     def process_batch(self, data_batch: List[Any]) -> str:
 
         if not data_batch:
             return "No data is provided"
 
-        temp = 0
-        temp_total = 0
+        temp: float = 0.0
+        temp_total: int = 0
 
         for ele in data_batch:
             if isinstance(ele, dict):
                 self.analysis_total += len(ele)
-                temp_temp = ele.get("temp", "no-reading")
+                temp_temp: Any = ele.get("temp", "no-reading")
                 if not isinstance(temp_temp, str):
                     temp += temp_temp
                     temp_total += 1
             else:
                 return "The data is not well structured (dict)"
 
-        avg = temp / temp_total if temp_total else 0
+        avg: float = temp / temp_total if temp_total else 0
         return (
             f"Sensor analysis: {self.analysis_total} readings processed, "
             f"avg temp: {avg}°C"
@@ -57,10 +57,10 @@ class SensorStream(DataStream):
         self, data_batch: List[Any], criteria: Optional[str] = None
     ) -> List[Any]:
 
-        if not data_batch:
-            return []
-
         result: List[Any] = []
+
+        if not data_batch:
+            return result
 
         for ele in data_batch:
             if isinstance(ele, dict):
@@ -69,7 +69,7 @@ class SensorStream(DataStream):
                     if value > criteria
                 )
             else:
-                return []
+                return result
 
         return result
 
@@ -77,26 +77,26 @@ class SensorStream(DataStream):
 class TransactionStream(DataStream):
 
     def __init__(self, stream_id: str) -> None:
-        self.stream_id = stream_id
-        self.data_type = "Financial Data"
-        self.analysis_total = 0
+        self.stream_id: str = stream_id
+        self.data_type: str = "Financial Data"
+        self.analysis_total: int = 0
 
     def process_batch(self, data_batch: List[Any]) -> str:
 
         if not data_batch:
             return "No data is provided"
 
-        net_flow = 0
+        net_flow: int = 0
 
         for ele in data_batch:
             if isinstance(ele, dict):
-                operation = ele["operation"]
-                amount = ele["amount"]
+                operation: str = ele["operation"]
+                amount: int = ele["amount"]
                 net_flow += amount if operation == "buy" else -amount
             else:
                 return "The data is not well structured (dict)"
 
-        sign = "+" if net_flow > 0 else ""
+        sign: str = "+" if net_flow > 0 else ""
         self.analysis_total = len(data_batch)
 
         return (
@@ -131,16 +131,16 @@ class TransactionStream(DataStream):
 class EventStream(DataStream):
 
     def __init__(self, stream_id: str) -> None:
-        self.stream_id = stream_id
-        self.data_type = "System Events"
-        self.analysis_total = 0
+        self.stream_id: str = stream_id
+        self.data_type: str = "System Events"
+        self.analysis_total: int = 0
 
     def process_batch(self, data_batch: List[Any]) -> str:
 
         if not data_batch:
             return "No data is provided"
 
-        errors = 0
+        errors: int = 0
 
         for ele in data_batch:
             if isinstance(ele, list):
@@ -185,8 +185,8 @@ class StreamProcessor:
     def process_all(self, batches: List[dict]) -> None:
 
         for ele in batches:
-            stream = ele["stream"]
-            data = ele["data"]
+            stream: DataStream = ele["stream"]
+            data: List[Any] = ele["data"]
 
             StreamProcessor.stream_objects.append(stream)
             stream.process_batch(data)
@@ -202,12 +202,14 @@ class StreamProcessor:
         result: Dict[DataStream, List[Any]] = {}
 
         for ele in batches_all:
-            stream = ele["stream"]
-            data = ele["data"]
-            criteria = ele["criteria"]
+            stream: DataStream = ele["stream"]
+            data: List[Any] = ele["data"]
+            criteria: Any = ele["criteria"]
 
             result[stream] = stream.filter_data(data, criteria)
 
+        sensor_alerts: List[Any]
+        large_transaction: List[Any]
         sensor_alerts, large_transaction = result.values()
 
         print(
@@ -222,20 +224,27 @@ if __name__ == "__main__":
 
     try:
         print("Initializing Sensor Stream...")
-        sensor_01 = SensorStream("SENSOR_001")
+        sensor_01: SensorStream = SensorStream("SENSOR_001")
         print(f"Stream ID: {sensor_01.stream_id}, Type: {sensor_01.data_type}")
-        print("Processing sensor batch: [temp:22.5, humidity:65, pressure:1013]")
-        sensor_batch = [{"temp": 22.5, "humidity": 65, "pressure": 1013}]
+        print("Processing sensor batch: "
+              "[temp:22.5, humidity:65, pressure:1013]")
+        sensor_batch: List[Dict[str, Union[float, int]]] = [
+                {
+                    "temp": 22.5,
+                    "humidity": 65,
+                    "pressure": 1013
+                }
+            ]
         print(sensor_01.process_batch(sensor_batch))
     except Exception as error:
         print(f"Error occured: {error}")
 
     try:
         print("\nInitializing Transaction Stream...")
-        trans_01 = TransactionStream("TRANS_001")
+        trans_01: TransactionStream = TransactionStream("TRANS_001")
         print(f"Stream ID: {trans_01.stream_id}, Type: {trans_01.data_type}")
         print("Processing transaction batch: [buy:100, sell:150, buy:75]")
-        trans_batch = [
+        trans_batch: List[Dict[str, Union[str, int]]] = [
             {"operation": "buy", "amount": 100},
             {"operation": "sell", "amount": 150},
             {"operation": "buy", "amount": 75},
@@ -246,10 +255,10 @@ if __name__ == "__main__":
 
     try:
         print("\nInitializing Event Stream...")
-        event_01 = EventStream("EVENT_001")
+        event_01: EventStream = EventStream("EVENT_001")
         print(f"Stream ID: {event_01.stream_id}, Type: {event_01.data_type}")
         print("Processing event batch: [login, error, logout]")
-        event_batch = [["login", "error", "logout"]]
+        event_batch: List[List[str]] = [["login", "error", "logout"]]
         print(event_01.process_batch(event_batch))
 
         print("\n=== Polymorphic Stream Processing ===")
@@ -257,11 +266,11 @@ if __name__ == "__main__":
     except Exception as error:
         print(f"Error occured: {error}")
 
-    sensor_02 = SensorStream("SENSOR_002")
-    trans_02 = TransactionStream("TRANS_002")
-    event_02 = EventStream("EVENT_002")
+    sensor_02: SensorStream = SensorStream("SENSOR_002")
+    trans_02: TransactionStream = TransactionStream("TRANS_002")
+    event_02: EventStream = EventStream("EVENT_002")
 
-    processor = StreamProcessor()
+    processor: StreamProcessor = StreamProcessor()
 
     batches: List[dict] = [
         {"stream": sensor_02, "data": [{"temp": 22.5}, {"temp": 29.5}]},
@@ -278,10 +287,11 @@ if __name__ == "__main__":
     ]
 
     processor.process_all(batches)
+    gen: Generator[Dict[str, Union[str, int, float]], None, None]
     gen = processor.get_stats_all()
 
     print("Batch 1 Results:")
-    curr = next(gen)
+    curr: Dict[str, Union[str, int, float]] = next(gen)
     print(f"- Sensor data: {curr['processed_count']} readings processed")
     curr = next(gen)
     print(f"- Transaction data: {curr['processed_count']} \
