@@ -4,7 +4,8 @@ def validate_ingredients(ingredients: str) -> str:
     words: list[str] = ingredients.split()
     
     for word in words:
-        if word in valid_elements:
-            return f"{ingredients} - VALID"
+        if not word in valid_elements:
+            return f"{ingredients} - INVALID"
+
+    return f"{ingredients} - VALID"
     
-    return f"{ingredients} - INVALID"
