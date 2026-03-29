@@ -1,4 +1,5 @@
-from CreatureCard import *
+# from CreatureCard import *
+from ex0.CreatureCard import CreatureCard
 
 print("=== DataDeck Card Foundation ===\n")
 

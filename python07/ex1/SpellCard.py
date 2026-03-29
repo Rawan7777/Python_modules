@@ -20,4 +20,9 @@ class SpellCard(Card):
         }
 
     def resolve_effect(self, targets: list) -> dict:
-        ...
+
+        return {
+            "spell": self.name,
+            "targets": targets,
+            "resolved": True
+        }
